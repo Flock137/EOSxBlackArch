@@ -40,6 +40,15 @@ echo "   EndeavourOS Post-Installation Setup Script   "
 echo "================================================"
 echo ""
 
+# Check if curl existed, if no, install it
+if ! command -v curl &> /dev/null; then
+    print_warning "curl not found. Installing curl..."
+    sudo pacman -S --needed --noconfirm curl
+    print_message "curl installed!"
+else
+    print_info "curl is already installed."
+fi
+
 # ==========================================
 # 1. BLACKARCH REPOSITORY SETUP
 # ==========================================
@@ -107,6 +116,7 @@ TOOLS=(
     "rekall"
     "autopsy"
     "vim"
+    # add more tools here if you want
 )
 
 # Install each tool
@@ -115,14 +125,9 @@ for tool in "${TOOLS[@]}"; do
     if sudo pacman -S --needed --noconfirm "$tool" 2>/dev/null; then
         print_message "$tool installed successfully!"
     else
-        # Try with overwrite flag if first attempt fails
-        print_warning "$tool failed, trying with --overwrite flag..."
-        if sudo pacman -S --needed --overwrite='*' --noconfirm "$tool" 2>/dev/null; then
-            print_message "$tool installed successfully with overwrite!"
-        else
-            print_error "Failed to install $tool. You may need to install it manually."
-        fi
+        print_error "Failed to install $tool. You may need to install it manually."
     fi
+fi
 done
 
 print_message "Security tools installation complete!"
@@ -218,14 +223,15 @@ echo "================================================"
 echo ""
 print_info "Summary of what was installed:"
 echo "  - BlackArch repository"
-echo "  - Security tools (cutter, burpsuite, ghidra, etc.)"
-echo "  - Zsh with Oh-My-Zsh"
+echo "  - Your security tools, aside from the necessary ones"
+echo "  - Zsh and Oh-My-Zsh"
 echo "  - zsh-autosuggestions and zsh-syntax-highlighting plugins"
-echo "  - heapbytes theme"
+echo "  - heapbytes theme for hackers:)"
 echo ""
-print_warning "IMPORTANT: Please log out and log back in (or reboot) for all changes to take effect!"
+print_warning "IMPORTANT: Please log out and log back in (or reboot, if the former doesn't work) for all changes to take effect!"
 echo ""
 print_info "You can customize your setup further by editing ~/.zshrc"
 print_info "To list all BlackArch tools: sudo pacman -Sgg | grep blackarch | cut -d' ' -f2 | sort -u"
 print_info "To see BlackArch categories: sudo pacman -Sg | grep blackarch"
+print_info "To install a category of tools: sudo pacman -S blackarch-<category>"
 echo ""
