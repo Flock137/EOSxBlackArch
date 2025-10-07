@@ -1,0 +1,231 @@
+#!/bin/bash
+
+# EndeavourOS Post-Installation Setup Script
+# Automates BlackArch repo setup, security tools installation, and zsh customization
+
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored messages
+print_message() {
+    echo -e "${GREEN}[+]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[!]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[*]${NC} $1"
+}
+
+print_info() {
+    echo -e "${BLUE}[i]${NC} $1"
+}
+
+# Check if script is run as root
+if [ "$EUID" -eq 0 ]; then
+    print_error "Please do not run this script as root. It will ask for sudo when needed."
+    exit 1
+fi
+
+echo "================================================"
+echo "   EndeavourOS Post-Installation Setup Script   "
+echo "================================================"
+echo ""
+
+# ==========================================
+# 1. BLACKARCH REPOSITORY SETUP
+# ==========================================
+
+print_message "Setting up BlackArch repository..."
+
+# Download strap.sh
+print_info "Downloading strap.sh..."
+curl -O https://blackarch.org/strap.sh
+
+# Verify SHA1 sum
+print_info "Verifying SHA1 checksum..."
+if echo "bdbaf7ecd039859160849a46694fe4921371e5b1 strap.sh" | sha1sum -c; then
+    print_message "Checksum verified successfully!"
+else
+    print_error "Checksum verification failed! Exiting for security."
+    exit 1
+fi
+
+# Set execute bit
+chmod +x strap.sh
+
+# Run strap.sh
+print_info "Running strap.sh to add BlackArch repository..."
+sudo ./strap.sh
+
+# Clean up strap.sh
+rm strap.sh
+
+# Enable multilib
+print_info "Enabling multilib repository..."
+if grep -q "^\[multilib\]" /etc/pacman.conf; then
+    print_warning "Multilib already enabled, skipping..."
+else
+    sudo sed -i '/^#\[multilib\]/,/^#Include/ s/^#//' /etc/pacman.conf
+    print_message "Multilib enabled!"
+fi
+
+# Update system
+print_message "Updating system packages..."
+sudo pacman -Syu --noconfirm
+
+print_message "BlackArch repository setup complete!"
+echo ""
+
+# ==========================================
+# 2. INSTALL SECURITY TOOLS
+# ==========================================
+
+print_message "Installing security tools..."
+
+# List of tools to install
+TOOLS=(
+    "cutter"
+    "burpsuite"
+    "binaryninja-free"
+    "ghidra"
+    "impacket"
+    "stegsolve"
+    "steghide"
+    "audacity"
+    "bloodhound"
+    "python-uncompyle6"
+    "villain"
+    "rekall"
+    "autopsy"
+    "vim"
+)
+
+# Install each tool
+for tool in "${TOOLS[@]}"; do
+    print_info "Installing $tool..."
+    if sudo pacman -S --needed --noconfirm "$tool" 2>/dev/null; then
+        print_message "$tool installed successfully!"
+    else
+        # Try with overwrite flag if first attempt fails
+        print_warning "$tool failed, trying with --overwrite flag..."
+        if sudo pacman -S --needed --overwrite='*' --noconfirm "$tool" 2>/dev/null; then
+            print_message "$tool installed successfully with overwrite!"
+        else
+            print_error "Failed to install $tool. You may need to install it manually."
+        fi
+    fi
+done
+
+print_message "Security tools installation complete!"
+echo ""
+
+# ==========================================
+# 3. ZSH SETUP
+# ==========================================
+
+print_message "Setting up Zsh shell..."
+
+# Install zsh
+print_info "Installing zsh..."
+sudo pacman -S --needed --noconfirm zsh
+
+# Install oh-my-zsh
+print_info "Installing Oh-My-Zsh..."
+if [ -d "$HOME/.oh-my-zsh" ]; then
+    print_warning "Oh-My-Zsh already installed, skipping..."
+else
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    print_message "Oh-My-Zsh installed!"
+fi
+
+# Set ZSH_CUSTOM path
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+
+# Install zsh-autosuggestions
+print_info "Installing zsh-autosuggestions plugin..."
+if [ -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
+    print_warning "zsh-autosuggestions already installed, skipping..."
+else
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+    print_message "zsh-autosuggestions installed!"
+fi
+
+# Install zsh-syntax-highlighting
+print_info "Installing zsh-syntax-highlighting plugin..."
+if [ -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
+    print_warning "zsh-syntax-highlighting already installed, skipping..."
+else
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+    print_message "zsh-syntax-highlighting installed!"
+fi
+
+# Update .zshrc with plugins
+print_info "Configuring plugins in .zshrc..."
+if grep -q "plugins=(git zsh-autosuggestions zsh-syntax-highlighting)" "$HOME/.zshrc"; then
+    print_warning "Plugins already configured, skipping..."
+else
+    sed -i 's/^plugins=(git)$/plugins=(git\n    zsh-autosuggestions\n    zsh-syntax-highlighting)/' "$HOME/.zshrc"
+    print_message "Plugins configured!"
+fi
+
+# ==========================================
+# 4. HEAPBYTES THEME SETUP
+# ==========================================
+
+print_message "Installing heapbytes zsh theme..."
+
+# Create themes directory if it doesn't exist
+mkdir -p "$ZSH_CUSTOM/themes"
+
+# Download heapbytes theme
+print_info "Downloading heapbytes theme..."
+curl -fsSL https://github.com/heapbytes/heapbytes-zsh/raw/refs/heads/main/heapbytes.zsh-theme -o "$ZSH_CUSTOM/themes/heapbytes.zsh-theme"
+
+# Set theme in .zshrc
+print_info "Setting heapbytes as default theme..."
+sed -i 's/^ZSH_THEME=".*"$/ZSH_THEME="heapbytes"/' "$HOME/.zshrc"
+
+print_message "Heapbytes theme installed and configured!"
+echo ""
+
+# ==========================================
+# 5. CHANGE DEFAULT SHELL
+# ==========================================
+
+print_message "Changing default shell to zsh..."
+
+# Check current shell
+if [ "$SHELL" = "$(which zsh)" ]; then
+    print_warning "Zsh is already your default shell!"
+else
+    chsh -s "$(which zsh)"
+    print_message "Default shell changed to zsh!"
+fi
+
+echo ""
+echo "================================================"
+echo "           Setup Complete!                      "
+echo "================================================"
+echo ""
+print_info "Summary of what was installed:"
+echo "  - BlackArch repository"
+echo "  - Security tools (cutter, burpsuite, ghidra, etc.)"
+echo "  - Zsh with Oh-My-Zsh"
+echo "  - zsh-autosuggestions and zsh-syntax-highlighting plugins"
+echo "  - heapbytes theme"
+echo ""
+print_warning "IMPORTANT: Please log out and log back in (or reboot) for all changes to take effect!"
+echo ""
+print_info "You can customize your setup further by editing ~/.zshrc"
+print_info "To list all BlackArch tools: sudo pacman -Sgg | grep blackarch | cut -d' ' -f2 | sort -u"
+print_info "To see BlackArch categories: sudo pacman -Sg | grep blackarch"
+echo ""
