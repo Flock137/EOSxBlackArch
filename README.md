@@ -26,7 +26,7 @@ A post-installation automation script for EndeavourOS, Arch and Arch-based distr
 - Fresh or existing EndeavourOS installation
 - Internet connection
 - Understand (at least vaguely) what the script `setup.sh` will do to your system
-- Ideally, some experience with Arch
+- Ideally, some experience with Arch or Arch-based distros
 
 ## Installation
 
