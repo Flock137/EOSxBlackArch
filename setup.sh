@@ -35,10 +35,34 @@ if [ "$EUID" -eq 0 ]; then
     exit 1
 fi
 
+FAILED_TOOLS=()
+
 echo "================================================"
 echo "   EndeavourOS Post-Installation Setup Script   "
 echo "================================================"
 echo ""
+
+print_warning "This script will modify your system configuration and install packages."
+print_info "Specifically, it will:"
+echo "  - Add the BlackArch repository"
+echo "  - Modify /etc/pacman.conf to enable multilib, in order to add the said repo"
+echo "  - Install security tools"
+echo "  - Set up Zsh with Oh-My-Zsh, its plugins and change default shell to zsh"
+echo "  - Change your terminal handle to something like that of BlackArch or Kali Linux"
+echo "  - You may also adjust the script manually to add the tools that you wish to have"
+echo ""
+read -p "Have you read and understood this script? (y/n): " -n 1 -r
+echo ""
+
+if [[ $REPLY =~ ^[Yy]([Ee][Ss])?$ ]]; then
+    print_message "Okay, have fun! :)"
+    print_info "Please take a look at your terminal once in a while to input sudo password"
+    echo ""
+else
+    print_warning "Please read the script first, else you may break your system :("
+    print_info "You can view it at: https://github.com/Flock137/EOSxBlackArch"
+    exit 0
+fi
 
 # Check if curl existed, if no, install it
 if ! command -v curl &> /dev/null; then
@@ -127,8 +151,8 @@ for tool in "${TOOLS[@]}"; do
         print_message "$tool installed successfully!"
     else
         print_error "Failed to install $tool. You may need to install it manually."
+        FAILED_TOOLS+=("$tool")
     fi
-fi
 done
 
 print_message "Security tools installation complete!"
@@ -201,6 +225,8 @@ print_info "Setting heapbytes as default theme..."
 sed -i 's/^ZSH_THEME=".*"$/ZSH_THEME="heapbytes"/' "$HOME/.zshrc"
 
 print_message "Heapbytes theme installed and configured!"
+print_info "You need to install and configure manually a Nerd-font, or Powerline font for icons rendering"
+
 echo ""
 
 # ==========================================
@@ -229,6 +255,18 @@ echo "  - Zsh and Oh-My-Zsh"
 echo "  - zsh-autosuggestions and zsh-syntax-highlighting plugins"
 echo "  - heapbytes theme for hackers:)"
 echo ""
+
+# Add this section for failed tools
+if [ ${#FAILED_TOOLS[@]} -gt 0 ]; then
+    print_warning "The following tools failed to install:"
+    for tool in "${FAILED_TOOLS[@]}"; do
+        echo "  - $tool"
+    done
+    echo ""
+    print_info "You can try installing them manually with the AUR (use yay, paru, etc.) or make your own PKGBUILD if it doesn't exist yet"
+    echo ""
+fi
+
 print_warning "IMPORTANT: Please log out and log back in (or reboot, if the former doesn't work) for all changes to take effect!"
 echo ""
 print_info "You can customize your setup further by editing ~/.zshrc"
