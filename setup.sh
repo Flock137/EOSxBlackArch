@@ -98,7 +98,7 @@ echo ""
 # 2. INSTALL SECURITY TOOLS
 # ==========================================
 
-print_message "Installing security tools..."
+print_message "Installing security tools (and virtualbox-guest-utils)..."
 
 # List of tools to install
 TOOLS=(
@@ -116,6 +116,7 @@ TOOLS=(
     "rekall"
     "autopsy"
     "vim"
+    "virtualbox-guest-utils"
     # add more tools here if you want
 )
 
