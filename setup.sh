@@ -274,3 +274,5 @@ print_info "To list all BlackArch tools: sudo pacman -Sgg | grep blackarch | cut
 print_info "To see BlackArch categories: sudo pacman -Sg | grep blackarch"
 print_info "To install a category of tools: sudo pacman -S blackarch-<category>"
 echo ""
+print_info "Additional tips:"
+echo "In a VM, you may like to toggle your sleep off, so it doesn't interrupt your running script:D"
