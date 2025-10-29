@@ -141,6 +141,9 @@ TOOLS=(
     "autopsy"
     "vim"
     "virtualbox-guest-utils"
+    "bat"
+    "frida"
+    "kitty"
     # add more tools here if you want
 )
 
