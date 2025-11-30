@@ -85,7 +85,7 @@ curl -O https://blackarch.org/strap.sh
 
 # Verify SHA1 sum
 print_info "Verifying SHA1 checksum..."
-if echo "bdbaf7ecd039859160849a46694fe4921371e5b1 strap.sh" | sha1sum -c; then
+if echo "e26445d34490cc06bd14b51f9924debf569e0ecb strap.sh" | sha1sum -c; then
     print_message "Checksum verified successfully!"
 else
     print_error "Checksum verification failed! Exiting for security."
