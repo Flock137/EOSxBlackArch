@@ -4,7 +4,8 @@ A post-installation automation script for EndeavourOS, Arch and Arch-based distr
 
 ## ⚠️ Warning
 
-**This script modifies your system configuration and installs packages.** Please read through the entire script before running it to understand what changes will be made to your system.
+- **This script modifies your system configuration and installs packages.** Please read through the entire script before running it to understand what changes will be made to your system.
+- Update: This script is also, technically, curl to arbitrary addresses, though they are credible, it will be in your best interest to only do the installation inside a Virtual Machine 
 
 ## What This Script Does
 
